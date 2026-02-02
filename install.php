@@ -56,7 +56,7 @@ try {
     }
     
     $messages[] = ['success', '✅ Installation complete! You can now access the admin panel.'];
-    $messages[] = ['warning', '⚠️ DELETE this install.php file for security.'];
+    $messages[] = ['warning', '⚠️ DELETE this install.php file for security reasons.'];
     
 } catch (Exception $e) {
     $messages[] = ['error', 'Installation failed: ' . $e->getMessage()];

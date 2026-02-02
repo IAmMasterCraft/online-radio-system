@@ -440,6 +440,7 @@ $baseUrl = BASE_URL;
     let videoEl = document.getElementById('videoPlayer');
     let activePlayer = null; // reference to current audio/video element
     let isPlaying = false;
+    let shouldAutoPlay = false; // track if user wants continuous playback
     let currentMedia = null;
     let syncTimer = null;
     let checkTimer = null;
@@ -447,9 +448,11 @@ $baseUrl = BASE_URL;
 
     // ── Core: Fetch Now Playing & Sync ──────────
     async function fetchNowPlaying() {
+        const requestStartTime = Date.now();
         try {
             const resp = await fetch(BASE + '/api/now-playing.php?_=' + Date.now());
             const data = await resp.json();
+            const requestDuration = (Date.now() - requestStartTime) / 1000; // in seconds
             
             document.getElementById('loadingState').style.display = 'none';
             
@@ -467,19 +470,19 @@ $baseUrl = BASE_URL;
             
             // Check if we need to change media or just sync
             const mediaChanged = !currentMedia || currentMedia.id !== data.media.id;
-            
+
             if (mediaChanged) {
-                loadMedia(data);
+                loadMedia(data, requestDuration);
             } else {
-                // Just sync the position
-                syncPosition(data.offset);
+                // Just sync the position (accounting for request time)
+                syncPosition(data.offset + requestDuration);
             }
             
             // Update track info
             updateTrackInfo(data);
-            
-            // Update progress
-            updateProgress(data.offset, data.media.duration);
+
+            // Update progress (accounting for request time)
+            updateProgress(data.offset + requestDuration, data.media.duration);
             
             // Update "up next"
             updateNext(data.next);
@@ -497,12 +500,13 @@ $baseUrl = BASE_URL;
             // Retry in 10 seconds
             scheduleNextCheck(10);
         }
+        play();
     }
 
-    function loadMedia(data) {
+    function loadMedia(data, requestDuration = 0) {
         currentMedia = data.media;
         const isVideo = data.media.media_type === 'video';
-        
+
         // Swap active player
         if (isVideo) {
             audioEl.pause();
@@ -517,14 +521,20 @@ $baseUrl = BASE_URL;
             document.getElementById('videoWrap').classList.remove('visible');
             document.getElementById('coverWrap').style.display = '';
         }
-        
+
         activePlayer.src = data.media.url;
-        activePlayer.currentTime = data.offset;
+        // Adjust offset to account for network latency and processing time
+        activePlayer.currentTime = data.offset + requestDuration;
         activePlayer.volume = document.getElementById('volSlider').value;
-        
-        // Auto-play if user has already interacted
-        if (isPlaying) {
-            activePlayer.play().catch(() => {});
+
+        // Auto-play if user wants continuous playback
+        if (shouldAutoPlay) {
+            activePlayer.play().then(() => {
+                setPlayingState(true);
+            }).catch(err => {
+                console.warn('Autoplay failed:', err);
+                setPlayingState(false);
+            });
         }
 
         // Update cover
@@ -648,6 +658,8 @@ $baseUrl = BASE_URL;
     }
 
     function play() {
+        shouldAutoPlay = true; // Enable continuous playback
+
         if (!activePlayer || !activePlayer.src) {
             // First play — fetch and start
             fetchNowPlaying().then(() => {
@@ -661,13 +673,14 @@ $baseUrl = BASE_URL;
             });
             return;
         }
-        
+
         activePlayer.play().then(() => {
             setPlayingState(true);
         }).catch(() => {});
     }
 
     function pause() {
+        shouldAutoPlay = false; // Disable continuous playback
         if (activePlayer) activePlayer.pause();
         setPlayingState(false);
     }
