@@ -7,7 +7,7 @@ A synchronized virtual radio station for your website. All listeners hear the sa
 This system simulates a traditional radio station using pre-uploaded media and server-side schedules:
 
 1. **Upload** — Admins upload audio/video files. The system detects each file's duration automatically.
-2. **Schedule** — Admins set what plays at specific dates/times (e.g., "Morning Devotional at 9:00 AM").
+2. **Schedule** — Admins set what plays at specific dates/times (e.g., "News Briefing at 9:00 AM").
 3. **Loop / Filler** — Admins designate certain tracks as "loop" media that plays continuously when nothing is scheduled.
 4. **Synchronized Playback** — When a listener opens the player:
    - The server checks the current time
@@ -298,6 +298,98 @@ The player (`player.php`) and admin panel (`admin/index.php`) use self-contained
 **Large files fail to upload?**
 - Increase PHP upload limits (see above)
 - Check web server config (Nginx: `client_max_body_size`)
+
+---
+
+## TODO / Future Features
+
+### 🎯 High Priority
+- [ ] **Analytics Dashboard** — Track listener count, popular tracks, peak listening times, and geographic distribution
+- [ ] **Multi-user & Role Management** — Support multiple admin users with different permission levels (Super Admin, DJ, Content Manager)
+- [ ] **Live Streaming Integration** — Support for actual live broadcasts (RTMP/HLS) alongside pre-recorded content
+- [ ] **Mobile Apps** — Native iOS and Android applications with offline caching
+- [ ] **Request System** — Allow listeners to request songs with moderation queue
+
+### 📊 Analytics & Monitoring
+- [ ] **Real-time Listener Count** — Show current active listeners on admin panel and player
+- [ ] **Listening History** — Track what users listened to and when
+- [ ] **Advanced Reports** — Weekly/monthly reports with charts and graphs
+- [ ] **Performance Metrics** — Server load, buffering events, error tracking
+- [ ] **Listener Demographics** — Device types, browsers, locations (privacy-respecting)
+
+### 🎨 User Experience
+- [ ] **Progressive Web App (PWA)** — Installable player with offline support
+- [ ] **Dark/Light Theme Toggle** — User preference for player appearance
+- [] **Mini Player Mode** — Compact floating player that stays on screen while browsing
+- [ ] **Keyboard Shortcuts** — Space to play/pause, arrow keys for volume, etc.
+- [ ] **Chromecast & AirPlay Support** — Stream to smart TVs and speakers
+- [ ] **Sleep Timer** — Auto-stop playback after specified time
+
+### 🎙️ Content Management
+- [ ] **Podcast Integration** — Auto-import episodes from RSS feeds and schedule them
+- [ ] **Bulk Upload** — Upload multiple files at once with batch metadata editing
+- [ ] **Media Categories/Tags** — Organize content by genre, mood, topic, etc.
+- [ ] **Smart Playlists** — Auto-generate playlists based on rules (genre, duration, tags)
+- [ ] **Content Calendar** — Visual monthly/weekly view of scheduled programming
+- [ ] **Recurring Schedules** — Schedule shows to repeat daily/weekly/monthly
+- [ ] **Drag-and-Drop Scheduling** — Visual timeline interface for scheduling
+
+### 💬 Community Features
+- [ ] **Live Chat** — Real-time chat for listeners during broadcasts
+- [ ] **Comments System** — Allow listeners to comment on shows/tracks
+- [ ] **Listener Polls** — Run interactive polls during broadcasts
+- [ ] **Social Media Integration** — Auto-post "Now Playing" to Twitter, Facebook, Discord
+- [ ] **Share Functionality** — Let listeners share what they're listening to
+- [ ] **Email Notifications** — Subscribe to notifications for favorite shows
+
+### 🔧 Technical Improvements
+- [ ] **CDN Support** — Serve media files from CDN for better performance
+- [ ] **Cloud Storage Integration** — S3, Google Cloud Storage, Azure Blob support
+- [ ] **Auto-Transcoding** — Convert uploaded files to optimal formats automatically
+- [ ] **Adaptive Bitrate Streaming** — Multiple quality levels for different connection speeds
+- [ ] **WebSocket Support** — Real-time updates without polling
+- [ ] **API Webhooks** — Notify external services when events occur (show starts, ends, etc.)
+- [ ] **Multi-station Support** — Run multiple radio stations from single installation
+- [ ] **Database Migration System** — Version-controlled database schema updates
+- [ ] **Docker Support** — Containerized deployment with docker-compose
+
+### 🎛️ DJ & Producer Tools
+- [ ] **DJ Panel** — Separate interface for DJs to manage their shows
+- [ ] **Live Mixer** — Simple web-based audio mixer for live shows
+- [ ] **Show Notes & Timestamps** — Add markers and notes during shows
+- [ ] **Pre-show Preparation** — Upload and prepare content before going live
+- [ ] **Automated Intros/Outros** — Auto-insert station IDs and jingles
+
+### 🛡️ Security & Compliance
+- [ ] **OAuth2 Integration** — Support for Google, Facebook, GitHub login
+- [ ] **Two-Factor Authentication** — 2FA for admin accounts
+- [ ] **Content Licensing Tracking** — Track music licenses and royalty information
+- [ ] **DMCA Compliance Tools** — Automated copyright claim handling
+- [ ] **Privacy Controls** — GDPR-compliant listener data management
+- [ ] **Rate Limiting** — Protect API endpoints from abuse
+
+### 💰 Monetization (Optional)
+- [ ] **Ad Insertion System** — Dynamic ad breaks with targeting
+- [ ] **Sponsorship Tools** — Manage sponsor mentions and advertisements
+- [ ] **Donation Integration** — Accept listener donations (Stripe, PayPal)
+- [ ] **Premium Subscriptions** — Ad-free listening, exclusive content
+- [ ] **Merchandise Store Integration** — Link to station merchandise
+
+### 🌐 Internationalization
+- [ ] **Multi-language Support** — Player and admin interface in multiple languages
+- [ ] **Timezone Management** — Display schedules in listener's local timezone
+- [ ] **Localized Content** — Different content for different regions
+
+---
+
+## Contributing
+
+Contributions make the world a better place! If you'd like to work on any of the TODO items above or have other suggestions, please:
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request with clear description of changes
+
+For major features, please open an issue first to discuss your ideas.
 
 ---
 
