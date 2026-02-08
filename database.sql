@@ -50,3 +50,16 @@ INSERT INTO radio_settings (setting_key, setting_value) VALUES
 ('station_tagline', 'Broadcasting hope, one story at a time'),
 ('loop_epoch', '2024-01-01 00:00:00')
 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
+
+CREATE TABLE IF NOT EXISTS radio_live_streams (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    platform ENUM('youtube', 'facebook', 'tiktok', 'instagram') NOT NULL,
+    account_name VARCHAR(255) NOT NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    last_checked DATETIME DEFAULT NULL,
+    is_live TINYINT(1) NOT NULL DEFAULT 0,
+    stream_url VARCHAR(500) DEFAULT NULL,
+    title VARCHAR(255) DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_active_streams (is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
