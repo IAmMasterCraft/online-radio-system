@@ -372,6 +372,28 @@ $baseUrl = BASE_URL;
             font-size: 1.1rem;
             margin-bottom: 1rem;
         }
+        /* ── Requests ──────────────────────────── */
+        .requests-filter select {
+            width: auto;
+            min-width: 150px;
+            padding: 0.5rem 0.8rem;
+        }
+        .request-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.8rem 1rem;
+        }
+        .request-item.pending { border-left: 4px solid var(--accent); }
+        .request-item.approved { border-left: 4px solid var(--success); }
+        .request-item.rejected { border-left: 4px solid var(--danger); }
+        .request-item .req-info { flex-grow: 1; }
+        .request-item .req-info .title { font-weight: 600; }
+        .request-item .req-info .meta { font-size: 0.85rem; color: var(--text-dim); }
+        .request-item .req-actions { display: flex; gap: 0.5rem; }
     </style>
 </head>
 <body>
@@ -620,6 +642,26 @@ $baseUrl = BASE_URL;
             </div>
         </div>
     </div>
+
+    <!-- ── Requests Panel ────────────────── -->
+    <div class="panel" id="panel-requests">
+        <div class="section-title">Song Requests</div>
+        <div class="section-subtitle">Manage song requests submitted by listeners.</div>
+
+        <div class="requests-filter" style="margin-bottom: 1rem;">
+            <label>Filter by Status:</label>
+            <select id="requestStatusFilter" onchange="loadRequests()">
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="all">All</option>
+            </select>
+        </div>
+
+        <div class="schedule-list" id="requestsList">
+            <div class="empty-state"><div class="icon">🎶</div><p>No song requests yet.</p></div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -643,6 +685,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabName === 'live') loadLiveStreams();
         if (tabName === 'settings') loadSettings();
         if (tabName === 'analytics') loadAnalytics();
+        if (tabName === 'requests') loadRequests();
     });
 });
 
@@ -1168,6 +1211,77 @@ async function loadAnalytics() {
         showAlert('Failed to load analytics data', 'error');
     }
 }
+
+// ── Requests ──────────────────────────────────
+async function loadRequests() {
+    const statusFilter = document.getElementById('requestStatusFilter').value;
+    try {
+        const resp = await fetch(BASE + `/api/requests.php?status=${statusFilter}`);
+        const data = await resp.json();
+        const list = document.getElementById('requestsList');
+
+        if (!data.length) {
+            list.innerHTML = '<div class="empty-state"><div class="icon">🎶</div><p>No song requests yet.</p></div>';
+            return;
+        }
+
+        list.innerHTML = data.map(r => `
+            <div class="request-item ${r.status}">
+                <div class="req-info">
+                    <div class="title">${esc(r.media_title)} - ${esc(r.media_artist)}</div>
+                    <div class="meta">Requested by: ${r.requester_name ? esc(r.requester_name) : 'Anonymous'} at ${new Date(r.requested_at).toLocaleString()}</div>
+                    ${r.message ? `<div class="meta">Message: ${esc(r.message)}</div>` : ''}
+                </div>
+                <div class="req-actions">
+                    ${r.status === 'pending' ? `
+                        <button class="btn btn-success btn-sm" onclick="updateRequestStatus(${r.id}, 'approved')">✓ Approve</button>
+                        <button class="btn btn-danger btn-sm" onclick="updateRequestStatus(${r.id}, 'rejected')">✕ Reject</button>
+                    ` : ''}
+                    <button class="btn btn-secondary btn-sm" onclick="deleteRequest(${r.id})">🗑 Delete</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        showAlert('Failed to load requests', 'error');
+    }
+}
+
+async function updateRequestStatus(id, status) {
+    try {
+        const resp = await fetch(BASE + '/api/requests.php', {
+            method: 'POST', // Using POST for updates as per api/requests.php design
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, status })
+        });
+        const result = await resp.json();
+
+        if (result.success) {
+            showAlert('Request ' + status + '!');
+            loadRequests();
+        } else {
+            showAlert('Failed to update request: ' + (result.error || 'Unknown error'), 'error');
+        }
+    } catch (err) {
+        showAlert('Error updating request: ' + err.message, 'error');
+    }
+}
+
+async function deleteRequest(id) {
+    if (!confirm('Are you sure you want to delete this request?')) return;
+    try {
+        const resp = await fetch(BASE + '/api/requests.php?id=' + id, { method: 'DELETE' });
+        const result = await resp.json();
+        if (result.success) {
+            showAlert('Request deleted!');
+            loadRequests();
+        } else {
+            showAlert('Failed to delete request: ' + (result.error || 'Unknown error'), 'error');
+        }
+    } catch (err) {
+        showAlert('Error deleting request: ' + err.message, 'error');
+    }
+}
+
 
 // ── Utilities ───────────────────────────────────
 function formatDuration(secs) {
