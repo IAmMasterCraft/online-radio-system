@@ -382,6 +382,7 @@ $baseUrl = BASE_URL;
     <div class="tab" data-tab="schedule">Schedule</div>
     <div class="tab" data-tab="loop">Loop / Filler</div>
     <div class="tab" data-tab="live">Live Streams</div>
+    <div class="tab" data-tab="settings">Settings</div>
 </nav>
 
 <div class="content">
@@ -538,6 +539,21 @@ $baseUrl = BASE_URL;
             <div class="empty-state"><div class="icon">📡</div><p>No live stream sources configured.</p></div>
         </div>
     </div>
+
+    <!-- ── Settings Panel ────────────────── -->
+    <div class="panel" id="panel-settings">
+        <div class="section-title">Settings</div>
+        <div class="section-subtitle">Manage general settings for the radio station.</div>
+
+        <div class="schedule-form-wrap">
+            <h3>API Keys</h3>
+            <div class="form-group">
+                <label>YouTube API Key</label>
+                <input type="text" id="settingYoutubeApiKey" placeholder="Enter your YouTube Data API v3 key">
+            </div>
+            <button class="btn btn-primary" onclick="saveSettings()" style="margin-top:0.5rem">Save Settings</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -559,6 +575,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabName === 'schedule') { loadSchedule(); loadMediaDropdown(); }
         if (tabName === 'loop') loadLoopMedia();
         if (tabName === 'live') loadLiveStreams();
+        if (tabName === 'settings') loadSettings();
     });
 });
 
@@ -1006,6 +1023,40 @@ async function toggleLiveStreamActive(id, isActive) {
     });
     showAlert(newStatus ? 'Live stream activated' : 'Live stream deactivated');
     loadLiveStreams();
+}
+
+// ── Settings ──────────────────────────────────
+async function loadSettings() {
+    try {
+        const resp = await fetch(BASE + '/api/settings.php');
+        const data = await resp.json();
+        document.getElementById('settingYoutubeApiKey').value = data.youtube_api_key || '';
+    } catch (err) {
+        showAlert('Failed to load settings', 'error');
+    }
+}
+
+async function saveSettings() {
+    const newSettings = {
+        youtube_api_key: document.getElementById('settingYoutubeApiKey').value
+    };
+
+    try {
+        const resp = await fetch(BASE + '/api/settings.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newSettings)
+        });
+        const result = await resp.json();
+
+        if (result.success) {
+            showAlert('Settings saved');
+        } else {
+            showAlert(result.error, 'error');
+        }
+    } catch (err) {
+        showAlert('Failed to save settings', 'error');
+    }
 }
 
 // ── Utilities ───────────────────────────────────

@@ -48,7 +48,8 @@ CREATE TABLE IF NOT EXISTS radio_settings (
 INSERT INTO radio_settings (setting_key, setting_value) VALUES
 ('station_name', 'Online Radio'),
 ('station_tagline', 'Broadcasting hope, one story at a time'),
-('loop_epoch', '2024-01-01 00:00:00')
+('loop_epoch', '2024-01-01 00:00:00'),
+('youtube_api_key', '')
 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
 
 CREATE TABLE IF NOT EXISTS radio_live_streams (
