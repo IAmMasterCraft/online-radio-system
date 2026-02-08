@@ -41,6 +41,7 @@ The player also periodically re-syncs with the server to correct any drift from 
 *   **Continuous Loop Playback:** Maintain an always-on broadcast with a customizable loop playlist for when no specific programs are scheduled.
 *   **Web-based Player:** A responsive player that automatically fetches current programming and synchronizes playback for all listeners.
 *   **API Access:** A clean API for developers to build custom players or integrate with other systems.
+*   **Analytics Dashboard:** A simple dashboard to track listener statistics, including total listens, unique listeners, most popular tracks, and peak listening times.
 
 ---
 
@@ -283,6 +284,7 @@ You can add a compact player to any page on your site:
 | `/api/live-streams.php?id=X` | DELETE | Delete a live stream source |
 | `/api/settings.php` | GET | Get all application settings |
 | `/api/settings.php` | POST | Update application settings (JSON: `{key: value, ...}`) |
+| `/api/analytics.php`| GET  | Get analytics data (total listens, unique listeners, popular tracks, peak times) |
 
 
 ---
@@ -359,7 +361,6 @@ The player (`player.php`) and admin panel (`admin/index.php`) use self-contained
 ## TODO / Future Features
 
 ### 🎯 High Priority
-- [ ] **Analytics Dashboard** — Track listener count, popular tracks, peak listening times, and geographic distribution
 - [ ] **Request System** — Allow listeners to request songs with moderation queue
 
 ### 📊 Analytics & Monitoring
