@@ -63,6 +63,16 @@ CREATE TABLE IF NOT EXISTS radio_listen_history (
     FOREIGN KEY (live_stream_id) REFERENCES radio_live_streams(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS radio_requests (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    media_id INT NOT NULL,
+    requester_name VARCHAR(255),
+    message TEXT,
+    status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+    requested_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (media_id) REFERENCES radio_media(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS radio_live_streams (
     id INT AUTO_INCREMENT PRIMARY KEY,
     platform ENUM('youtube', 'facebook', 'tiktok', 'instagram') NOT NULL,
