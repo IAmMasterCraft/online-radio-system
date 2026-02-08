@@ -26,6 +26,24 @@ The player also periodically re-syncs with the server to correct any drift from 
 
 ---
 
+## Features
+
+*   **Synchronized Media Playback:** All listeners hear the same audio/video content at the same time, whether it's scheduled programming or continuous loop music.
+*   **Live Streaming Integration:** Seamlessly integrate live broadcasts from social media platforms (currently YouTube with automatic detection) alongside pre-recorded content. Live streams take precedence over all other programming.
+*   **Admin Panel:** A comprehensive web-based interface for managing all aspects of the radio station, including:
+    *   Uploading and managing audio/video media.
+    *   Creating and managing broadcast schedules.
+    *   Organizing and reordering a continuous "loop / filler" playlist.
+    *   Configuring API keys (e.g., YouTube Data API key) for external services.
+    *   Adding and managing social media live stream sources.
+*   **Media Management:** Upload, organize, and manage your audio and video files with automatic duration detection.
+*   **Flexible Scheduling:** Define specific times for media playback, with automatic end-time calculation.
+*   **Continuous Loop Playback:** Maintain an always-on broadcast with a customizable loop playlist for when no specific programs are scheduled.
+*   **Web-based Player:** A responsive player that automatically fetches current programming and synchronizes playback for all listeners.
+*   **API Access:** A clean API for developers to build custom players or integrate with other systems.
+
+---
+
 ## Requirements
 
 - **PHP 7.4+** (8.0+ recommended)
@@ -306,8 +324,7 @@ The player (`player.php`) and admin panel (`admin/index.php`) use self-contained
 ### 🎯 High Priority
 - [ ] **Analytics Dashboard** — Track listener count, popular tracks, peak listening times, and geographic distribution
 - [ ] **Multi-user & Role Management** — Support multiple admin users with different permission levels (Super Admin, DJ, Content Manager)
-- [ ] **Live Streaming Integration** — Support for actual live broadcasts (Using social media accounts (Tiktok, FB, YT, IG)) alongside pre-recorded content
-- [ ] **Mobile Apps** — Native iOS and Android applications with offline caching
+- [ ] **Multi-user & Role Management** — Support multiple admin users with different permission levels (Super Admin, DJ, Content Manager)
 - [ ] **Request System** — Allow listeners to request songs with moderation queue
 
 ### 📊 Analytics & Monitoring
