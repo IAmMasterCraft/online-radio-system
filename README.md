@@ -306,7 +306,7 @@ The player (`player.php`) and admin panel (`admin/index.php`) use self-contained
 ### 🎯 High Priority
 - [ ] **Analytics Dashboard** — Track listener count, popular tracks, peak listening times, and geographic distribution
 - [ ] **Multi-user & Role Management** — Support multiple admin users with different permission levels (Super Admin, DJ, Content Manager)
-- [ ] **Live Streaming Integration** — Support for actual live broadcasts (RTMP/HLS) alongside pre-recorded content
+- [ ] **Live Streaming Integration** — Support for actual live broadcasts (Using social media accounts (Tiktok, FB, YT, IG)) alongside pre-recorded content
 - [ ] **Mobile Apps** — Native iOS and Android applications with offline caching
 - [ ] **Request System** — Allow listeners to request songs with moderation queue
 
