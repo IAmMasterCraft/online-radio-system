@@ -281,21 +281,26 @@ $baseUrl = BASE_URL;
             margin-top: 0.15rem;
         }
 
-        /* ── Video container ───────────────────── */
-        .video-wrap {
-            display: none;
+        /* ── Media container ───────────────────── */
+        .media-container {
+            display: none; /* Hidden by default, shown when video or iframe is active */
             width: 100%;
             max-width: 480px;
             border-radius: 16px;
             overflow: hidden;
             margin-bottom: 1.5rem;
             background: #000;
+            position: relative; /* For iframe positioning */
         }
-        .video-wrap video {
+        .media-container video, .media-container iframe {
             width: 100%;
+            height: 100%; /* Make iframe fill the container */
             display: block;
+            border: none;
+            position: absolute;
+            top: 0; left: 0;
         }
-        .video-wrap.visible { display: block; }
+        .media-container.visible { display: block; }
 
         /* ── Offline State ─────────────────────── */
         .offline-msg {
@@ -345,11 +350,12 @@ $baseUrl = BASE_URL;
             <p class="tagline"><?= htmlspecialchars($tagline) ?></p>
         </header>
 
-        <div class="video-wrap" id="videoWrap">
-            <video id="videoPlayer" playsinline></video>
-        </div>
-
         <div class="player-card" id="playerCard">
+            <div class="media-container" id="mediaContainer">
+                <video id="videoPlayer" playsinline></video>
+                <!-- YouTube iframe will be inserted here dynamically -->
+            </div>
+            
             <div class="loading" id="loadingState">
                 <div class="spinner"></div>
                 <span>Tuning in...</span>
@@ -437,7 +443,6 @@ $baseUrl = BASE_URL;
     const MAX_DRIFT = <?= MAX_DRIFT ?>;
 
     let audioEl = document.getElementById('audioPlayer');
-    let videoEl = document.getElementById('videoPlayer');
     let activePlayer = null; // reference to current audio/video element
     let isPlaying = false;
     let shouldAutoPlay = false; // track if user wants continuous playback
@@ -505,27 +510,71 @@ $baseUrl = BASE_URL;
 
     function loadMedia(data, requestDuration = 0) {
         currentMedia = data.media;
-        const isVideo = data.media.media_type === 'video';
 
-        // Swap active player
+        // Reset display states
+        document.getElementById('playerContent').style.display = 'block';
+        document.getElementById('mediaContainer').classList.remove('visible');
+        document.getElementById('mediaContainer').innerHTML = ''; // Clear previous media
+
+        if (data.status === 'live') {
+            document.getElementById('playerContent').style.display = 'none';
+            document.getElementById('mediaContainer').classList.add('visible');
+
+            if (currentMedia.platform === 'youtube' && currentMedia.url) {
+                // Extract video ID from URL
+                const videoIdMatch = currentMedia.url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})|youtube\.com\/playlist\?list=|youtube\.com\/channel\//);
+                const videoId = videoIdMatch ? videoIdMatch[1] : null;
+
+                if (videoId) {
+                    const iframe = document.createElement('iframe');
+                    iframe.setAttribute('src', `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&enablejsapi=1`);
+                    iframe.setAttribute('frameborder', '0');
+                    iframe.setAttribute('allow', 'autoplay; encrypted-media');
+                    iframe.setAttribute('allowfullscreen', '');
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                    document.getElementById('mediaContainer').appendChild(iframe);
+                    // No direct activePlayer for iframe, but set state to playing
+                    activePlayer = null; // Indicate no direct control over media element
+                    isPlaying = true;
+                    shouldAutoPlay = true;
+                    updateStatus(data.status);
+                    updateTrackInfo(data); // Still show title/artist
+                    return; // Skip further media handling
+                } else {
+                    // Fallback if YouTube URL parsing fails
+                    document.getElementById('mediaContainer').innerHTML = `<p style="color:var(--text-dim); text-align:center; padding: 2rem;">Could not embed YouTube live stream. <a href="${currentMedia.url}" target="_blank" style="color:var(--warm);">Open in YouTube</a></p>`;
+                }
+            } else {
+                // For other live platforms, just show a message and link for now
+                document.getElementById('mediaContainer').innerHTML = `<p style="color:var(--text-dim); text-align:center; padding: 2rem;">Live stream from ${currentMedia.platform}. <a href="${currentMedia.url}" target="_blank" style="color:var(--warm);">Watch Live</a></p>`;
+            }
+            activePlayer = null;
+            isPlaying = true;
+            shouldAutoPlay = true;
+            updateStatus(data.status);
+            updateTrackInfo(data); // Still show title/artist
+            return; // Skip further media handling
+        }
+
+        const isVideo = data.media.media_type === 'video';
+        
+        // Setup for scheduled/loop media
         if (isVideo) {
             audioEl.pause();
             audioEl.src = '';
             activePlayer = videoEl;
-            document.getElementById('videoWrap').classList.add('visible');
+            document.getElementById('mediaContainer').classList.add('visible');
             document.getElementById('coverWrap').style.display = 'none';
+            activePlayer.src = data.media.url; // Set src here for video element
         } else {
             videoEl.pause();
             videoEl.src = '';
             activePlayer = audioEl;
-            document.getElementById('videoWrap').classList.remove('visible');
+            document.getElementById('mediaContainer').classList.remove('visible');
             document.getElementById('coverWrap').style.display = '';
+            activePlayer.src = data.media.url; // Set src here for audio element
         }
-
-        activePlayer.src = data.media.url;
-        // Adjust offset to account for network latency and processing time
-        activePlayer.currentTime = data.offset + requestDuration;
-        activePlayer.volume = document.getElementById('volSlider').value;
 
         // Auto-play if user wants continuous playback
         if (shouldAutoPlay) {
@@ -552,7 +601,7 @@ $baseUrl = BASE_URL;
     }
 
     function syncPosition(expectedOffset) {
-        if (!activePlayer || !isPlaying) return;
+        if (!activePlayer || !isPlaying || !activePlayer.duration) return; // Only sync if there's a seekable active player
         const actualOffset = activePlayer.currentTime;
         const drift = Math.abs(actualOffset - expectedOffset);
         
@@ -575,6 +624,9 @@ $baseUrl = BASE_URL;
             dot.classList.add('live');
         } else if (status === 'loop') {
             label.textContent = 'NOW PLAYING';
+        } else if (status === 'live') {
+            label.textContent = 'LIVE';
+            dot.classList.add('live');
         } else {
             label.textContent = 'OFF AIR';
         }
@@ -587,7 +639,7 @@ $baseUrl = BASE_URL;
                 : data.media.title;
         document.getElementById('trackArtist').textContent = data.media.artist || '';
         
-        const desc = data.schedule_desc || data.media.description || '';
+        const desc = (data.status === 'scheduled' && data.schedule_desc) || data.media.description || '';
         const descEl = document.getElementById('trackDesc');
         descEl.textContent = desc;
         descEl.style.display = desc ? '' : 'none';
@@ -650,6 +702,11 @@ $baseUrl = BASE_URL;
 
     // ── Playback Controls ───────────────────────
     function togglePlay() {
+        if (currentMedia && currentMedia.platform && currentMedia.platform !== 'youtube') {
+            // For live streams other than YouTube, we just let them play externally
+            return;
+        }
+
         if (isPlaying) {
             pause();
         } else {
@@ -661,19 +718,25 @@ $baseUrl = BASE_URL;
         shouldAutoPlay = true; // Enable continuous playback
 
         if (!activePlayer || !activePlayer.src) {
-            // First play — fetch and start
+            // First play or switching to new media — fetch and start
             fetchNowPlaying().then(() => {
-                if (activePlayer) {
+                // If an activePlayer (audio/video element) is set after fetch, try to play
+                if (activePlayer && activePlayer.src) {
                     activePlayer.play().then(() => {
                         setPlayingState(true);
                     }).catch(err => {
                         console.warn('Autoplay blocked:', err);
+                        setPlayingState(false);
                     });
+                } else if (currentMedia && currentMedia.platform === 'youtube') {
+                    // If YouTube live, assume it's playing via iframe
+                    setPlayingState(true);
                 }
             });
             return;
         }
 
+        // If an activePlayer is already set and has a source
         activePlayer.play().then(() => {
             setPlayingState(true);
         }).catch(() => {});
@@ -689,17 +752,22 @@ $baseUrl = BASE_URL;
         isPlaying = playing;
         const icon = document.getElementById('playIcon');
         
-        if (playing) {
+        if (playing && activePlayer) { // Only show pause icon if we have an active controllable player
             icon.innerHTML = '<rect x="5" y="3" width="4" height="18"></rect><rect x="15" y="3" width="4" height="18"></rect>';
             startVisualizer();
+        } else if (playing && currentMedia && currentMedia.platform === 'youtube') {
+            // For YouTube live, no direct control, but visually indicate playing
+            icon.innerHTML = '<rect x="5" y="3" width="4" height="18"></rect><rect x="15" y="3" width="4" height="18"></rect>'; // Still show pause icon
+            stopVisualizer(); // No visualizer for iframe
         } else {
             icon.innerHTML = '<polygon points="6,3 20,12 6,21"></polygon>';
             stopVisualizer();
         }
+        document.getElementById('playBtn').disabled = (currentMedia && currentMedia.platform && currentMedia.platform !== 'youtube' && !activePlayer);
     }
 
     function toggleMute() {
-        if (!activePlayer) return;
+        if (!activePlayer) return; // Do nothing if no direct media player
         const slider = document.getElementById('volSlider');
         const icon = document.getElementById('volIcon');
         
@@ -716,6 +784,7 @@ $baseUrl = BASE_URL;
     }
 
     document.getElementById('volSlider').addEventListener('input', e => {
+        if (!activePlayer) return; // Do nothing if no direct media player
         if (activePlayer) {
             activePlayer.volume = parseFloat(e.target.value);
             document.getElementById('volIcon').textContent = 
@@ -782,7 +851,6 @@ $baseUrl = BASE_URL;
 
     // Handle media ending
     audioEl.addEventListener('ended', fetchNowPlaying);
-    videoEl.addEventListener('ended', fetchNowPlaying);
     </script>
 </body>
 </html>
