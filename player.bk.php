@@ -158,8 +158,6 @@ $baseUrl = BASE_URL;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            color: var(--text-dim);
-            margin-bottom: 0.4rem;
         }
         .status-label.live { color: var(--on-air); }
         .status-label.loop { color: var(--warm); }
@@ -341,50 +339,6 @@ $baseUrl = BASE_URL;
             background: var(--warm);
             transition: height 0.15s;
         }
-        /* ── Request Modal ─────────────────────── */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0; top: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            justify-content: center;
-            align-items: center;
-        }
-        .modal.visible { display: flex; }
-        .modal-content {
-            background: var(--surface);
-            padding: 2rem;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 400px;
-            border: 1px solid var(--border);
-        }
-        .modal-content h3 { margin-bottom: 1rem; }
-        /* Basic form styles for modal */
-        .form-group { margin-bottom: 1rem; }
-        .form-group label {
-            display: block; font-size: 0.8rem; font-weight: 600;
-            color: var(--text-dim); margin-bottom: 0.35rem;
-            text-transform: uppercase; letter-spacing: 0.05em;
-        }
-        .modal-content input, .modal-content select, .modal-content textarea {
-            width: 100%; padding: 0.65rem 0.85rem;
-            background: var(--surface-2); border: 1px solid var(--border);
-            border-radius: 8px; color: var(--text);
-            font-family: inherit; font-size: 0.95rem;
-        }
-        .modal-content textarea { resize: vertical; min-height: 80px; }
-        .btn {
-            display: inline-flex; align-items: center; gap: 0.5rem;
-            padding: 0.65rem 1.3rem; border: none; border-radius: 8px;
-            font-family: inherit; font-size: 0.9rem; font-weight: 600;
-            cursor: pointer; transition: all 0.2s;
-            text-decoration: none;
-        }
-        .btn-primary { background: var(--warm); color: #000; }
-        .btn-secondary { background: var(--surface-2); color: var(--text); }
     </style>
 </head>
 <body>
@@ -451,7 +405,7 @@ $baseUrl = BASE_URL;
                     <div class="vol-wrap">
                         <span class="vol-icon" id="volIcon" onclick="toggleMute()">🔊</span>
                         <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.01" value="0.8">
-                    </divgt
+                    </div>
                     <button class="play-btn" id="playBtn" onclick="togglePlay()">
                         <svg viewBox="0 0 24 24" id="playIcon">
                             <polygon points="6,3 20,12 6,21"></polygon>
@@ -477,32 +431,6 @@ $baseUrl = BASE_URL;
                         <p id="offlineNext"></p>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <button class="btn btn-secondary" id="requestBtn" onclick="openRequestModal()" style="margin-top: 1rem;">Request a Song</button>
-    </div>
-
-    <div class="modal" id="requestModal">
-        <div class="modal-content">
-            <h3>Request a Song</h3>
-            <div class="form-group">
-                <label>Select a Song</label>
-                <select id="requestMedia">
-                    <option value="">Loading songs...</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Your Name (Optional)</label>
-                <input type="text" id="requestName" placeholder="Your name">
-            </div>
-            <div class="form-group">
-                <label>Message (Optional)</label>
-                <textarea id="requestMessage" placeholder="A dedication or message"></textarea>
-            </div>
-            <div style="display:flex; gap: 0.75rem; margin-top: 1rem;">
-                <button class="btn btn-primary" onclick="submitRequest()">Submit Request</button>
-                <button class="btn btn-secondary" onclick="closeRequestModal()">Cancel</button>
             </div>
         </div>
     </div>
@@ -916,67 +844,6 @@ $baseUrl = BASE_URL;
         const s = secs % 60;
         if (h > 0) return h + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
         return m + ':' + String(s).padStart(2, '0');
-    }
-
-    // ── Request Modal Logic ─────────────────────
-    async function openRequestModal() {
-        document.getElementById('requestModal').classList.add('visible');
-        await loadRequestMedia();
-    }
-
-    function closeRequestModal() {
-        document.getElementById('requestModal').classList.remove('visible');
-        document.getElementById('requestMedia').value = '';
-        document.getElementById('requestName').value = '';
-        document.getElementById('requestMessage').value = '';
-    }
-
-    async function loadRequestMedia() {
-        const select = document.getElementById('requestMedia');
-        select.innerHTML = '<option value="">Loading songs...</option>';
-        try {
-            const resp = await fetch(BASE + '/api/media.php?active=1&is_loop=0');
-            const data = await resp.json();
-            if (data.length) {
-                select.innerHTML = '<option value="">— Select a song —</option>' + 
-                    data.map(m => `<option value="${m.id}">${esc(m.title)} - ${esc(m.artist)}</option>`).join('');
-            } else {
-                select.innerHTML = '<option value="">No songs available</option>';
-            }
-        } catch (err) {
-            console.error('Failed to load media for requests:', err);
-            select.innerHTML = '<option value="">Error loading songs</option>';
-        }
-    }
-
-    async function submitRequest() {
-        const mediaId = document.getElementById('requestMedia').value;
-        const requesterName = document.getElementById('requestName').value;
-        const message = document.getElementById('requestMessage').value;
-
-        if (!mediaId) {
-            alert('Please select a song to request.');
-            return;
-        }
-
-        try {
-            const resp = await fetch(BASE + '/api/requests.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ media_id: mediaId, requester_name: requesterName, message: message })
-            });
-            const result = await resp.json();
-
-            if (result.success) {
-                alert('Your song request has been submitted!');
-                closeRequestModal();
-            } else {
-                alert('Failed to submit request: ' + (result.error || 'Unknown error'));
-            }
-        } catch (err) {
-            console.error('Request submission error:', err);
-            alert('An error occurred while submitting your request.');
-        }
     }
 
     // ── Init ────────────────────────────────────
