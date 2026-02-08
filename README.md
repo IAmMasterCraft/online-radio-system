@@ -46,7 +46,8 @@ The player also periodically re-syncs with the server to correct any drift from 
 
 ## Requirements
 
-- **PHP 7.4+** (8.0+ recommended)
+- **PHP 7.4+** (8.0+ recommended) and PHP CLI available in system PATH.
+- **Composer** (for PHP dependency management).
 - **MySQL 5.7+** or **MariaDB 10.3+**
 - **Web server** (Apache or Nginx)
 - **ffmpeg/ffprobe** (recommended, for server-side duration detection)
@@ -102,6 +103,15 @@ define('ADMIN_PASS', 'your-secure-password');
 CREATE DATABASE online_radio CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
+### 3a. Install Composer Dependencies
+
+Navigate to the project root and install PHP dependencies:
+
+```bash
+/opt/homebrew/bin/php composer.phar install
+```
+*(Ensure `php` is in your system PATH or adjust the command above to the full path of your PHP executable)*
+
 ### 4. Run the installer
 
 Visit `https://yoursite.com/radio/install.php` in your browser. This creates all the necessary tables and directories.
@@ -121,6 +131,16 @@ sudo yum install ffmpeg
 ```
 
 If ffprobe is not available, the system falls back to browser-based duration detection.
+
+### 6. Setup Live Stream Status Updates (Optional, for Live Feature)
+
+If you plan to use the live streaming feature, you'll need to set up a cron job to periodically update the live status of your configured social media accounts.
+
+Example cron job (runs every minute):
+```bash
+* * * * * /opt/homebrew/bin/php /path/to/your/online-radio-system/scripts/update_live_statuses.php >> /var/log/radio_live_update.log 2>&1
+```
+*(Adjust `/opt/homebrew/bin/php` and `/path/to/your/online-radio-system/` to your actual paths)*
 
 ---
 
@@ -153,6 +173,13 @@ Visit `https://yoursite.com/radio/admin/` and log in.
 - See total loop duration
 - Drag to reorder tracks
 - Remove tracks from loop
+
+**Live Streams Tab**
+- Add and manage social media accounts for live broadcasting (currently YouTube with automatic status detection).
+- The system will automatically check if configured sources are live (requires cron job setup).
+
+**Settings Tab**
+- Configure various system settings, including API keys for external services (e.g., YouTube Data API key for live stream detection).
 
 ### Player
 
@@ -247,6 +274,12 @@ You can add a compact player to any page on your site:
 | `/api/schedule.php` | POST | Create schedule (JSON: `{media_id, start_time, title?, description?}`) |
 | `/api/schedule.php?id=X` | DELETE | Delete schedule entry |
 | `/api/loop-reorder.php` | POST | Reorder loop playlist (JSON: `{order: [id, id, ...]}`) |
+| `/api/live-streams.php` | GET | List all configured live stream sources |
+| `/api/live-streams.php` | POST | Add new live stream source or update (JSON: `{platform, account_name, is_active?}`) |
+| `/api/live-streams.php?id=X` | DELETE | Delete a live stream source |
+| `/api/settings.php` | GET | Get all application settings |
+| `/api/settings.php` | POST | Update application settings (JSON: `{key: value, ...}`) |
+
 
 ---
 
@@ -323,8 +356,6 @@ The player (`player.php`) and admin panel (`admin/index.php`) use self-contained
 
 ### 🎯 High Priority
 - [ ] **Analytics Dashboard** — Track listener count, popular tracks, peak listening times, and geographic distribution
-- [ ] **Multi-user & Role Management** — Support multiple admin users with different permission levels (Super Admin, DJ, Content Manager)
-- [ ] **Multi-user & Role Management** — Support multiple admin users with different permission levels (Super Admin, DJ, Content Manager)
 - [ ] **Request System** — Allow listeners to request songs with moderation queue
 
 ### 📊 Analytics & Monitoring
