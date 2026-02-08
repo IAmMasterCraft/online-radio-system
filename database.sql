@@ -52,6 +52,17 @@ INSERT INTO radio_settings (setting_key, setting_value) VALUES
 ('youtube_api_key', '')
 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
 
+CREATE TABLE IF NOT EXISTS radio_listen_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    media_id INT,
+    live_stream_id INT,
+    listen_time DATETIME NOT NULL,
+    ip_address VARCHAR(45),
+    user_agent VARCHAR(255),
+    FOREIGN KEY (media_id) REFERENCES radio_media(id) ON DELETE SET NULL,
+    FOREIGN KEY (live_stream_id) REFERENCES radio_live_streams(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS radio_live_streams (
     id INT AUTO_INCREMENT PRIMARY KEY,
     platform ENUM('youtube', 'facebook', 'tiktok', 'instagram') NOT NULL,

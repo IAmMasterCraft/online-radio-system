@@ -67,14 +67,13 @@ your-website/
 │   ├── install.php
 │   ├── player.php
 │   ├── database.sql
+│   ├── composer.json
+│   ├── composer.lock
 │   ├── admin/
 │   │   └── index.php
 │   ├── api/
 │   │   ├── now-playing.php
-│   │   ├── upload.php
-│   │   ├── media.php
-│   │   ├── schedule.php
-│   │   └── loop-reorder.php
+│   │   ├── ...
 │   ├── includes/
 │   │   ├── live-checkers/
 │   │       ├── youtube.php

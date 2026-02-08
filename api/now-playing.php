@@ -35,7 +35,22 @@ $nowDt = date('Y-m-d H:i:s', $now);
 $stmt = $db->query("SELECT id, platform, account_name, stream_url, title FROM radio_live_streams WHERE is_active = 1 AND is_live = 1 LIMIT 1");
 $liveStream = $stmt->fetch(PDO::FETCH_ASSOC);
 
+// ── 3. Log the listen event ───────────────────
+function logListenHistory(PDO $db, ?array $media, ?array $liveStream): void {
+    $stmt = $db->prepare(
+        "INSERT INTO radio_listen_history (media_id, live_stream_id, listen_time, ip_address, user_agent) 
+         VALUES (:media_id, :live_stream_id, NOW(), :ip, :ua)"
+    );
+    $stmt->execute([
+        ':media_id' => $media ? $media['id'] : null,
+        ':live_stream_id' => $liveStream ? $liveStream['id'] : null,
+        ':ip' => $_SERVER['REMOTE_ADDR'] ?? null,
+        ':ua' => $_SERVER['HTTP_USER_AGENT'] ?? null,
+    ]);
+}
+
 if ($liveStream) {
+    logListenHistory($db, null, $liveStream);
     jsonResponse([
         'status'        => 'live',
         'server_time'   => $now,
@@ -54,6 +69,7 @@ if ($liveStream) {
         'next_check_in' => 5,    // Check frequently if live stream is still active
     ]);
 }
+
 
 // ── 2. Check for an active scheduled item ─────────
 
@@ -88,6 +104,9 @@ if ($scheduled) {
 }
 
 if ($scheduled) {
+    // Log listen event
+    logListenHistory($db, $scheduled, null);
+
     // Find what's next after this scheduled item
     $next = getNextScheduled($db, $scheduled['end_time']);
     
@@ -191,6 +210,9 @@ if (!$next || (strtotime($nextSchedule['start_time']) - $now) > $trackRemaining)
         'starts_in'  => round($trackRemaining, 2),
     ];
 }
+
+// Log listen event for loop media
+logListenHistory($db, $currentTrack, null);
 
 jsonResponse([
     'status'        => 'loop',
