@@ -104,10 +104,21 @@ function getMediaDuration(string $filepath): ?float {
 
 // ── Simple Auth Check ─────────────────────────────
 function requireAdmin(): void {
-    session_start();
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
     if (empty($_SESSION['radio_admin'])) {
-        if (basename($_SERVER['SCRIPT_FILENAME']) !== 'index.php') {
-            header('Location: ' . BASE_URL . '/admin/index.php');
+        // For API requests, return a JSON error.
+        // For browser requests, redirect to login.
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Authentication required.']);
+            exit;
+        } else {
+            // Not an AJAX request, so it's likely a direct access attempt.
+            // Redirect to admin login page.
+            header('Location: ' . BASE_URL . '/admin/');
             exit;
         }
     }
