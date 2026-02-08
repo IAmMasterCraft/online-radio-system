@@ -339,6 +339,39 @@ $baseUrl = BASE_URL;
             font-size: 0.9rem; margin-bottom: 1rem;
             display: inline-block;
         }
+
+        /* ── Analytics ─────────────────────────── */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .analytics-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+        }
+        .analytics-card h3 {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .analytics-card .stat {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .analytics-section {
+            margin-bottom: 2rem;
+        }
+        .analytics-section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -383,6 +416,7 @@ $baseUrl = BASE_URL;
     <div class="tab" data-tab="loop">Loop / Filler</div>
     <div class="tab" data-tab="live">Live Streams</div>
     <div class="tab" data-tab="settings">Settings</div>
+    <div class="tab" data-tab="analytics">Analytics</div>
 </nav>
 
 <div class="content">
@@ -554,6 +588,37 @@ $baseUrl = BASE_URL;
             <button class="btn btn-primary" onclick="saveSettings()" style="margin-top:0.5rem">Save Settings</button>
         </div>
     </div>
+
+    <!-- ── Analytics Panel ───────────────── -->
+    <div class="panel" id="panel-analytics">
+        <div class="section-title">Analytics Dashboard</div>
+        <div class="section-subtitle">Insights into your station's listenership.</div>
+
+        <div class="analytics-grid">
+            <div class="analytics-card">
+                <h3>Total Listens</h3>
+                <div class="stat" id="totalListens">...</div>
+            </div>
+            <div class="analytics-card">
+                <h3>Unique Listeners (by IP)</h3>
+                <div class="stat" id="uniqueListeners">...</div>
+            </div>
+        </div>
+
+        <div class="analytics-section">
+            <h3>Most Popular Tracks</h3>
+            <div id="popularTracksList">
+                <div class="empty-state"><div class="icon">📈</div><p>No listening data yet.</p></div>
+            </div>
+        </div>
+
+        <div class="analytics-section">
+            <h3>Peak Listening Times (by hour)</h3>
+            <div id="peakTimesList">
+                <div class="empty-state"><div class="icon">📈</div><p>No listening data yet.</p></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -576,6 +641,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabName === 'loop') loadLoopMedia();
         if (tabName === 'live') loadLiveStreams();
         if (tabName === 'settings') loadSettings();
+        if (tabName === 'analytics') loadAnalytics();
     });
 });
 
@@ -1056,6 +1122,49 @@ async function saveSettings() {
         }
     } catch (err) {
         showAlert('Failed to save settings', 'error');
+    }
+}
+
+// ── Analytics ─────────────────────────────────
+async function loadAnalytics() {
+    try {
+        const resp = await fetch(BASE + '/api/analytics.php');
+        const data = await resp.json();
+
+        document.getElementById('totalListens').textContent = data.total_listens;
+        document.getElementById('uniqueListeners').textContent = data.unique_listeners;
+
+        const popularTracksList = document.getElementById('popularTracksList');
+        if (data.popular_tracks && data.popular_tracks.length) {
+            popularTracksList.innerHTML = data.popular_tracks.map(track => `
+                <div class="schedule-item">
+                    <div class="info">
+                        <div class="title">${esc(track.title)}</div>
+                        <div class="artist">${esc(track.artist)}</div>
+                    </div>
+                    <div class="duration">Listens: ${track.listen_count}</div>
+                </div>
+            `).join('');
+        } else {
+            popularTracksList.innerHTML = '<div class="empty-state"><div class="icon">📈</div><p>No listening data for tracks yet.</p></div>';
+        }
+
+        const peakTimesList = document.getElementById('peakTimesList');
+        if (data.peak_times && data.peak_times.length) {
+            peakTimesList.innerHTML = data.peak_times.map(hour => `
+                <div class="schedule-item">
+                    <div class="info">
+                        <div class="title">${hour.hour}:00 - ${hour.hour}:59</div>
+                    </div>
+                    <div class="duration">Listens: ${hour.listen_count}</div>
+                </div>
+            `).join('');
+        } else {
+            peakTimesList.innerHTML = '<div class="empty-state"><div class="icon">📈</div><p>No listening data for peak times yet.</p></div>';
+        }
+
+    } catch (err) {
+        showAlert('Failed to load analytics data', 'error');
     }
 }
 
