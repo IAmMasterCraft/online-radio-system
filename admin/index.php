@@ -381,6 +381,7 @@ $baseUrl = BASE_URL;
     <div class="tab" data-tab="library">Media Library</div>
     <div class="tab" data-tab="schedule">Schedule</div>
     <div class="tab" data-tab="loop">Loop / Filler</div>
+    <div class="tab" data-tab="live">Live Streams</div>
 </nav>
 
 <div class="content">
@@ -506,6 +507,37 @@ $baseUrl = BASE_URL;
             <div class="empty-state"><div class="icon">🔁</div><p>No filler tracks. Upload media and mark as "loop" to add them here.</p></div>
         </div>
     </div>
+
+    <!-- ── Live Streams Panel ──────────────── -->
+    <div class="panel" id="panel-live">
+        <div class="section-title">Live Streams</div>
+        <div class="section-subtitle">Manage social media accounts for live broadcasting. The system will automatically check if they are live.</div>
+
+        <div class="schedule-form-wrap">
+            <h3>Add Live Stream Source</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select id="livePlatform">
+                        <option value="youtube">YouTube</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="instagram">Instagram</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Account Name / Channel ID</label>
+                    <input type="text" id="liveAccountName" placeholder="e.g. YourChannelName">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="addLiveStream()" style="margin-top:0.5rem">Add Live Source</button>
+        </div>
+
+        <div class="section-title" style="margin-top:1rem">Managed Live Sources</div>
+        <div class="schedule-list" id="liveStreamList">
+            <div class="empty-state"><div class="icon">📡</div><p>No live stream sources configured.</p></div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -526,6 +558,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tabName === 'library') loadLibrary();
         if (tabName === 'schedule') { loadSchedule(); loadMediaDropdown(); }
         if (tabName === 'loop') loadLoopMedia();
+        if (tabName === 'live') loadLiveStreams();
     });
 });
 
@@ -894,6 +927,85 @@ function initDragReorder() {
         });
         loadLoopMedia();
     });
+}
+
+// ── Live Streams ────────────────────────────────
+async function loadLiveStreams() {
+    try {
+        const resp = await fetch(BASE + '/api/live-streams.php');
+        const data = await resp.json();
+        const list = document.getElementById('liveStreamList');
+
+        if (!data.length) {
+            list.innerHTML = '<div class="empty-state"><div class="icon">📡</div><p>No live stream sources configured.</p></div>';
+            return;
+        }
+
+        list.innerHTML = data.map(s => `
+            <div class="schedule-item">
+                <div class="info">
+                    <div class="title">${esc(s.account_name)} (${s.platform})</div>
+                    <div class="artist">${s.is_live ? '🔴 LIVE' : 'Offline'}</div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-secondary btn-sm" onclick="toggleLiveStreamActive(${s.id}, ${s.is_active})">${s.is_active ? 'Deactivate' : 'Activate'}</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteLiveStream(${s.id})">✕</button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        showAlert('Failed to load live streams', 'error');
+    }
+}
+
+async function addLiveStream() {
+    const platform = document.getElementById('livePlatform').value;
+    const accountName = document.getElementById('liveAccountName').value;
+
+    if (!accountName) {
+        showAlert('Please enter an account name', 'warning');
+        return;
+    }
+
+    try {
+        const resp = await fetch(BASE + '/api/live-streams.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                platform: platform,
+                account_name: accountName,
+            })
+        });
+        const result = await resp.json();
+
+        if (result.success) {
+            showAlert('Live stream source added');
+            loadLiveStreams();
+            document.getElementById('liveAccountName').value = '';
+        } else {
+            showAlert(result.error, 'error');
+        }
+    } catch (err) {
+        showAlert('Failed to add live stream', 'error');
+    }
+}
+
+async function deleteLiveStream(id) {
+    if (!confirm('Remove this live stream source?')) return;
+    await fetch(BASE + '/api/live-streams.php?id=' + id, { method: 'DELETE' });
+    showAlert('Live stream source removed');
+    loadLiveStreams();
+}
+
+async function toggleLiveStreamActive(id, isActive) {
+    const newStatus = isActive ? 0 : 1;
+    await fetch(BASE + '/api/live-streams.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, is_active: newStatus })
+    });
+    showAlert(newStatus ? 'Live stream activated' : 'Live stream deactivated');
+    loadLiveStreams();
 }
 
 // ── Utilities ───────────────────────────────────
