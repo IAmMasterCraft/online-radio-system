@@ -417,6 +417,7 @@ $baseUrl = BASE_URL;
     <div class="tab" data-tab="live">Live Streams</div>
     <div class="tab" data-tab="settings">Settings</div>
     <div class="tab" data-tab="analytics">Analytics</div>
+    <div class="tab" data-tab="requests">Requests</div>
 </nav>
 
 <div class="content">
