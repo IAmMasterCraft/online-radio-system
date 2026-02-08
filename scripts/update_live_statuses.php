@@ -56,7 +56,7 @@ try {
         $updateStmt->execute([$isLive, $streamUrl, $streamTitle, $stream['id']]);
 
         if ($isLive) {
-            echo "  Status: LIVE! Title: "{$streamTitle}", URL: {$streamUrl}
+            echo "  Status: LIVE! Title: '{$streamTitle}', URL: {$streamUrl}
 ";
         } else {
             echo "  Status: Offline.
@@ -66,7 +66,6 @@ try {
 
     echo "Live stream status update completed.
 ";
-
 } catch (Exception $e) {
     echo "Error during live stream update: " . $e->getMessage() . "
 ";

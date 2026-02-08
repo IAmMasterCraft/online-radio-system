@@ -75,6 +75,11 @@ your-website/
 │   │   ├── media.php
 │   │   ├── schedule.php
 │   │   └── loop-reorder.php
+│   ├── includes/
+│   │   ├── live-checkers/
+│   │       ├── youtube.php
+│   ├── scripts/
+│   │   ├── update_live_statuses.php
 │   └── uploads/       (created automatically)
 ```
 
