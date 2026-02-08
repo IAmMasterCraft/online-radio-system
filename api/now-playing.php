@@ -31,7 +31,31 @@ $db = getDB();
 $now = time();
 $nowDt = date('Y-m-d H:i:s', $now);
 
-// ── 1. Check for an active scheduled item ─────────
+// ── 1. Check for an active live stream ─────────
+$stmt = $db->query("SELECT id, platform, account_name, stream_url, title FROM radio_live_streams WHERE is_active = 1 AND is_live = 1 LIMIT 1");
+$liveStream = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if ($liveStream) {
+    jsonResponse([
+        'status'        => 'live',
+        'server_time'   => $now,
+        'media'         => [
+            'id'           => (int) $liveStream['id'],
+            'title'        => $liveStream['title'] ?: $liveStream['account_name'] . ' (Live)',
+            'artist'       => $liveStream['platform'],
+            'url'          => $liveStream['stream_url'],
+            'media_type'   => 'video', // Assuming live streams are usually video, could be dynamic
+            'duration'     => null,    // Live stream has no fixed duration
+            'cover_image'  => null,    // No cover image for live stream
+        ],
+        'offset'        => 0,
+        'remaining'     => null, // Live stream has no fixed remaining time
+        'next'          => null, // No "next" item for a continuous live stream
+        'next_check_in' => 5,    // Check frequently if live stream is still active
+    ]);
+}
+
+// ── 2. Check for an active scheduled item ─────────
 
 $stmt = $db->prepare("
     SELECT s.id AS schedule_id, s.title AS schedule_title, s.description AS schedule_desc,
